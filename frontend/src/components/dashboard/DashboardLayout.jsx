@@ -172,7 +172,7 @@ const DashboardLayout = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <Card className="lg:col-span-2 order-2 lg:order-1">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold">실시간 트렌드</CardTitle>
+              <CardTitle className="text-lg font-semibold">하하 개습갸 배포 다 했쥬? 자동화 했쥬?</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
