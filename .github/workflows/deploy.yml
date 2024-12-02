@@ -10,19 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 코드 체크아웃
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # 2. SSH로 EC2에 연결해 Docker Compose 실행
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@v0.1.2
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          cd ~/NewsPulse
-          git pull origin main
-          docker-compose down
-          docker-compose up --build -d
+      # 2. SSH로 EC2 연결 후 Docker Compose 실행
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22  # 기본 SSH 포트
+          script: |
+            cd ~/NewsPulse  # EC2의 프로젝트 경로로 이동
+            git pull origin main  # 최신 코드 가져오기
+            docker-compose down  # 기존 컨테이너 종료
+            docker-compose up --build -d  # 새 컨테이너 빌드 및 실행
