@@ -1,0 +1,43 @@
+# General
+.DS_Store
+Thumbs.db
+
+# Python
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+*.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+
+# Vite
+dist/
+
+# Docker
+*.pid
+*.seed
+docker-compose.override.yml
+
+# Logs and debugging
+*.log
+*.gz
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.swp
+
+# OS-generated files
+*.DS_Store
+*.Trash
+*.Spotlight-V100
