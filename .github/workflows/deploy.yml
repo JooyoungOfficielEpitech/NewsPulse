@@ -31,5 +31,11 @@ jobs:
             whoami
             cd ~/NewsPulse
             git pull origin main
-            docker-compose down
+            echo "Checking for running containers..."
+            if [ "$(docker ps -q)" ]; then
+              echo "Docker containers are running. Stopping and removing them..."
+              docker-compose down
+            else
+              echo "No running containers found. Skipping 'docker-compose down'."
+            fi
             docker-compose up --build -d
