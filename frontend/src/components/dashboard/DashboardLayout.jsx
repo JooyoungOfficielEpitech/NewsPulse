@@ -1,30 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Search, Settings, TrendingUp, Newspaper, Hash, ChevronDown, Menu, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useNewsApi } from '@/hooks/useNewsApi';
 
 const DashboardLayout = () => {
   const [selectedCategories, setSelectedCategories] = useState(['정치', '경제']);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [newsData, setNewsData] = useState([]);
+  const [trendData, setTrendData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const { fetchNews, fetchTrends, saveUserPreferences } = useNewsApi();
   
   const categories = [
     '정치', '경제', '사회', '생활/문화', '세계', 'IT/과학', '연예', '스포츠'
   ];
 
-  const trendData = [
-    { name: '00:00', 정치: 30, 경제: 45, 사회: 25 },
-    { name: '04:00', 정치: 35, 경제: 40, 사회: 30 },
-    { name: '08:00', 정치: 45, 경제: 50, 사회: 35 },
-    { name: '12:00', 정치: 65, 경제: 55, 사회: 40 },
-    { name: '16:00', 정치: 55, 경제: 45, 사회: 45 },
-    { name: '20:00', 정치: 40, 경제: 50, 사회: 35 }
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // 선택된 카테고리별로 뉴스 데이터 가져오기
+        const newsPromises = selectedCategories.map(category => 
+          fetchNews(category, 5)
+        );
+        const newsResults = await Promise.all(newsPromises);
+        setNewsData(newsResults.flat());
 
-  const toggleCategory = (category) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter(c => c !== category));
-    } else {
-      setSelectedCategories([...selectedCategories, category]);
+        // 트렌드 데이터 가져오기
+        const trendsData = await fetchTrends(selectedCategories);
+        setTrendData(trendsData);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [selectedCategories]);
+
+  const toggleCategory = async (category) => {
+    const newCategories = selectedCategories.includes(category)
+      ? selectedCategories.filter(c => c !== category)
+      : [...selectedCategories, category];
+    
+    setSelectedCategories(newCategories);
+    
+    try {
+      await saveUserPreferences(
+        "user123",
+        newCategories,
+        []
+      );
+    } catch (error) {
+      console.error('Error saving preferences:', error);
     }
   };
 
@@ -139,28 +172,34 @@ const DashboardLayout = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <Card className="lg:col-span-2 order-2 lg:order-1">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold">박윤하</CardTitle>
+              <CardTitle className="text-lg font-semibold">실시간 트렌드</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] lg:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trendData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    {selectedCategories.map((category, index) => (
-                      <Line
-                        key={category}
-                        type="monotone"
-                        dataKey={category}
-                        stroke={`hsl(${index * 60}, 70%, 50%)`}
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {loading ? (
+                <div className="h-[300px] lg:h-[400px] flex items-center justify-center">
+                  <p>Loading trends...</p>
+                </div>
+              ) : (
+                <div className="h-[300px] lg:h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={trendData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis dataKey="timestamp" />
+                      <YAxis />
+                      <Tooltip />
+                      {selectedCategories.map((category, index) => (
+                        <Line
+                          key={category}
+                          type="monotone"
+                          dataKey={category}
+                          stroke={`hsl(${index * 60}, 70%, 50%)`}
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -174,22 +213,28 @@ const DashboardLayout = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {selectedCategories.map((category, i) => (
-                  <div key={i} className="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all cursor-pointer">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-blue-600">{category}</span>
-                      <span className="text-xs text-gray-500">10분 전</span>
+              {loading ? (
+                <div className="h-64 flex items-center justify-center">
+                  <p>Loading news...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {newsData.map((news, i) => (
+                    <div key={i} className="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all cursor-pointer">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-blue-600">{news.category}</span>
+                        <span className="text-xs text-gray-500">{news.publishedAt}</span>
+                      </div>
+                      <h3 className="font-medium mb-1 line-clamp-2">
+                        {news.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {news.summary || news.content}
+                      </p>
                     </div>
-                    <h3 className="font-medium mb-1 line-clamp-2">
-                      {category} 관련 주요 뉴스 헤드라인
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      뉴스 요약 내용이 이 곳에 표시됩니다...
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -202,19 +247,25 @@ const DashboardLayout = () => {
                 <CardTitle className="text-sm font-medium">{category} 트렌드</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((j) => (
-                    <div key={j} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg font-bold text-gray-400">#{j}</span>
-                        <span className="font-medium">키워드 {j}</span>
+                {loading ? (
+                  <div className="h-32 flex items-center justify-center">
+                    <p>Loading trends...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((j) => (
+                      <div key={j} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-bold text-gray-400">#{j}</span>
+                          <span className="font-medium">키워드 {j}</span>
+                        </div>
+                        <span className={`text-sm ${j === 1 ? 'text-red-500' : 'text-gray-500'}`}>
+                          {j === 1 ? '+45%' : `+${10 * j}%`}
+                        </span>
                       </div>
-                      <span className={`text-sm ${j === 1 ? 'text-red-500' : 'text-gray-500'}`}>
-                        {j === 1 ? '+45%' : `+${10 * j}%`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
