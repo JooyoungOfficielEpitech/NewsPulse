@@ -34,10 +34,12 @@ def crawl_news_from_naver(keyword: str, limit: int = 100):
             "start": (page - 1) * articles_per_page + 1,  # 페이지 계산
         }
         try:
+            
             response = requests.get(base_url, params=params, headers=headers, timeout=10)
 
             # HTTP 상태 코드 확인
             if response.status_code == 403:
+                print(response.text)
                 log_crawling_error(keyword, response.status_code, "Access Denied")
                 break
             elif response.status_code != 200:
