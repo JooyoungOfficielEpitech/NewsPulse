@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import time
 import re
 
-def crawl_news_from_naver(keyword: str, limit: int = 100):
+def crawl_news_from_naver(keyword: str, limit: int = 10):
     """
     네이버 뉴스에서 키워드로 검색된 결과를 크롤링합니다. 여러 페이지를 탐색합니다.
     

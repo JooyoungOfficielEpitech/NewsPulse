@@ -10,14 +10,14 @@ def schedule_tasks():
     scheduler.add_job(
         lambda: update_news_from_api_by_scheduler(),
         "interval",
-        minutes=1,
+        minutes=100,
     )
     
     # 트렌드 업데이트
     scheduler.add_job(
         lambda: update_trend_from_api_by_scheduler(),
         "interval",
-        minutes=1,
+        minutes=30,
     )
     
     

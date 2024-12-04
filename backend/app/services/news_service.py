@@ -40,16 +40,19 @@ def save_news_to_db(news_items: list, category : str):
     db = SessionLocal()
     try:
         for item in news_items:
-            if not db.query(News).filter(News.url == item["url"]).first():
-                news = News(
-                    title=item["title"],
-                    description=item["description"],
-                    url=item["url"],
-                    published_at=item["published_at"],
-                    category=category,
-                    source=item["source"],
-                )
-                db.add(news)
+            try:
+                if not db.query(News).filter(News.url == item["url"]).first():
+                    news = News(
+                        title=item["title"],
+                        description=item["description"],
+                        url=item["url"],
+                        published_at=item["published_at"],
+                        category=category,
+                        source=item["source"],
+                    )
+                    db.add(news)
+            except Exception as e:
+                print(f"Error saving news : {e}")
         db.commit()
     finally:
         db.close()
