@@ -10,6 +10,11 @@ services:
       - ./backend:/usr/src/app
     networks:
       - app-network
+    environment:
+      - DATABASE_URL=postgresql://newspulse_user:bV0_cCo-@postgres:5432/newspulse_db
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   frontend:
     build:
@@ -23,6 +28,28 @@ services:
       - VITE_API_URL=http://backend:8000
     networks:
       - app-network
+
+  postgres:
+    image: postgres:15
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: newspulse_user
+      POSTGRES_PASSWORD: bV0_cCo-
+      POSTGRES_DB: newspulse_db
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U newspulse_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
 
 networks:
   app-network:

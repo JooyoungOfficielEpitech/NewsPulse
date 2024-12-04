@@ -1,17 +1,23 @@
-from fastapi import APIRouter, Query
-from typing import List
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.services.news_service import fetch_news_from_api, save_news_to_db
+from app.config import settings
+from app.models.news import News
+from app.services.news_crawler import crawl_news_from_naver
+
 
 router = APIRouter()
 
-# Mock 데이터
-news_data = [
-    {"id": "1", "title": "경제 뉴스 1", "category": "경제", "summary": "경제 요약...", "url": "#", "published_at": "2024-12-02T10:00:00"},
-    {"id": "2", "title": "정치 뉴스 1", "category": "정치", "summary": "정치 요약...", "url": "#", "published_at": "2024-12-02T10:05:00"},
-]
-
 @router.get("/")
-def get_news(category: str = Query(None), limit: int = 10):
+def get_news(category: str = None, db: Session = Depends(get_db)):
+    query = db.query(News).order_by(News.published_at.desc())
     if category:
-        filtered_news = [news for news in news_data if news["category"] == category]
-        return filtered_news[:limit]
-    return news_data[:limit]
+        query = query.filter(News.category == category)
+    return query.all()
+
+@router.post("/fetch")
+def fetch_news(category: str = "general", limit: int = 10):
+    data = crawl_news_from_naver(category, limit)
+    save_news_to_db(data, category)
+    return {"status": "success", "fetched": len(data)}
