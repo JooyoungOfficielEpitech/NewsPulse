@@ -48,4 +48,5 @@ responses
 pytest-dotenv
 email-validator
 bs4
+asyncpg
 konlpy

@@ -1,24 +1,23 @@
-from apscheduler.schedulers.background import BackgroundScheduler
-from app.services.news_service import fetch_news_from_api, save_news_to_db, update_news_from_api_by_scheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.services.news_service import update_news_from_api_by_scheduler
 from app.services.trend_service import update_trend_from_api_by_scheduler
-from app.config import settings
 
 def schedule_tasks():
-    scheduler = BackgroundScheduler()
-    
-    # 뉴스 업데이트
+    scheduler = AsyncIOScheduler()
+
+    # 뉴스 업데이트 작업 추가
     scheduler.add_job(
-        lambda: update_news_from_api_by_scheduler(),
+        update_news_from_api_by_scheduler,
         "interval",
         minutes=100,
     )
-    
-    # 트렌드 업데이트
+
+    # 트렌드 업데이트 작업 추가
     scheduler.add_job(
-        lambda: update_trend_from_api_by_scheduler(),
+        update_trend_from_api_by_scheduler,
         "interval",
         minutes=30,
     )
-    
-    
+
+    # 스케줄러 시작
     scheduler.start()

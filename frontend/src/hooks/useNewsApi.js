@@ -24,6 +24,7 @@ export function useNewsApi() {
 
   const fetchTrends = async (categories = [], intervalMinutes = 60) => {
     try {
+      setLoading(true);
       const params = new URLSearchParams();
       categories.forEach(category => params.append('categories', category));
       params.append('interval_minutes', intervalMinutes);
@@ -32,8 +33,32 @@ export function useNewsApi() {
       if (!response.ok) throw new Error('Failed to fetch trends');
       return await response.json();
     } catch (err) {
+      console.log("here")
       setError(err.message);
       throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshSelectedCategories = async (selectedCategories) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/trends/update/`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(selectedCategories)
+      });
+      if (!response.ok) throw new Error('Failed to refresh trends');
+      return await response.json();
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -113,6 +138,7 @@ export function useNewsApi() {
   return {
     fetchNews,
     fetchTrends,
+    refreshSelectedCategories,
     saveUserPreferences,
     getUserPreferences,
     getCategories,

@@ -8,14 +8,6 @@ import { NewsFeed } from './NewsFeed';
 import { CategoryTrendCard } from './CategoryTrendCard';
 import { CategoryManager } from './CategoryManager';
 
-const TIME_INTERVALS = [
-  { value: 15, label: '15분' },
-  { value: 30, label: '30분' },
-  { value: 60, label: '1시간' },
-  { value: 180, label: '3시간' },
-  { value: 360, label: '6시간' },
-];
-
 const DashboardLayout = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -73,7 +65,7 @@ const DashboardLayout = () => {
       setTrendData(trendResults);
 
     } catch (error) {
-      console.error('Error loading data:', error);
+      // console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }

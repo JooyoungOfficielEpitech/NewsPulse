@@ -3,6 +3,12 @@ import { ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const NewsFeed = ({ loading, newsData }) => {
+  const handleNewsClick = (url) => {
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <Card className="order-1 lg:order-2">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -20,7 +26,18 @@ export const NewsFeed = ({ loading, newsData }) => {
         ) : (
           <div className="space-y-4">
             {newsData.map((news, i) => (
-              <div key={i} className="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all cursor-pointer">
+              <div
+                key={i}
+                onClick={() => handleNewsClick(news.url)}
+                className="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleNewsClick(news.url);
+                  }
+                }}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-blue-600">{news.category}</span>
                   <span className="text-xs text-gray-500">{news.published_at}</span>

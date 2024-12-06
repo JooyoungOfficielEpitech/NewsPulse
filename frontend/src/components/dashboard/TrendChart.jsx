@@ -4,7 +4,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, Legend, Area, ComposedChart 
 } from 'recharts';
-import { Clock } from 'lucide-react';
+import { Clock, RotateCw } from 'lucide-react';
+import { useNewsApi } from '@/hooks/useNewsApi';
 
 const TIME_INTERVALS = [
   { value: 15, label: '15분' },
@@ -93,12 +94,16 @@ const CustomLegend = ({ payload }) => {
 };
 
 export const TrendChart = ({ 
-  loading, 
+  loading: externalLoading, 
   trendData, 
   selectedCategories, 
   selectedInterval,
-  onIntervalChange 
+  onIntervalChange,
+  onRefreshComplete 
 }) => {
+  const { fetchTrends, refreshSelectedCategories, loading: apiLoading } = useNewsApi();
+  const loading = externalLoading || apiLoading;
+
   const chartData = useMemo(() => {
     const processedData = processRawData(trendData);
     
@@ -143,6 +148,18 @@ export const TrendChart = ({
     };
   }, [chartData]);
 
+  const handleRefresh = async () => {
+    try {
+      await refreshSelectedCategories(selectedCategories);
+      const newTrendData = await fetchTrends(selectedCategories, selectedInterval);
+      if (onRefreshComplete) {
+        onRefreshComplete(newTrendData);
+      }
+    } catch (error) {
+      console.error('Error refreshing trends:', error);
+    }
+  };
+
   return (
     <Card className="lg:col-span-2 order-2 lg:order-1">
       <CardHeader className="flex flex-col space-y-2 pb-2">
@@ -155,19 +172,33 @@ export const TrendChart = ({
               카테고리별 뉴스 발행 추이
             </p>
           </div>
-          <select 
-            value={selectedInterval}
-            onChange={(e) => onIntervalChange(Number(e.target.value))}
-            className="px-4 py-2 bg-background border rounded-lg text-sm font-medium 
-                     focus:outline-none focus:ring-2 focus:ring-primary transition-all
-                     dark:bg-background dark:border-border"
-          >
-            {TIME_INTERVALS.map(interval => (
-              <option key={interval.value} value={interval.value}>
-                {interval.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={loading || !selectedCategories.length}
+              className="p-2 hover:bg-accent rounded-lg transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
+                       active:scale-95"
+              title="트렌드 새로고침"
+            >
+              <RotateCw className={`w-5 h-5 text-muted-foreground hover:text-foreground 
+                                  ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <select 
+              value={selectedInterval}
+              onChange={(e) => onIntervalChange(Number(e.target.value))}
+              className="px-4 py-2 bg-background border rounded-lg text-sm font-medium 
+                       focus:outline-none focus:ring-2 focus:ring-primary transition-all
+                       dark:bg-background dark:border-border"
+            >
+              {TIME_INTERVALS.map(interval => (
+                <option key={interval.value} value={interval.value}>
+                  {interval.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

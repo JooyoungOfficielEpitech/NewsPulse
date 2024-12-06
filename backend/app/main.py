@@ -12,19 +12,18 @@ from app.routers import trends
 Base.metadata.create_all(bind=engine)
 
 
-
-
 schedule_tasks()
 
 app = FastAPI()
 
-# @app.on_event("startup")
-# async def startup():
-#     print("Dropping all tables...")
-#     Base.metadata.drop_all(bind=engine)  # 기존 테이블 삭제
-#     print("Creating all tables...")
-#     Base.metadata.create_all(bind=engine)  # 테이블 다시 생성
-#     print("Database reset complete.")
+@app.on_event("startup")
+async def startup():
+    schedule_tasks()
+    # print("Dropping all tables...")
+    # Base.metadata.drop_all(bind=engine)  # 기존 테이블 삭제
+    # print("Creating all tables...")
+    # Base.metadata.create_all(bind=engine)  # 테이블 다시 생성
+    # print("Database reset complete.")
 
 # CORS 설정
 app.add_middleware(
