@@ -1,8 +1,18 @@
-# Backend Dockerfile
-FROM python:3.10-slim
+FROM python:3.10-bullseye
 
 # Set the working directory
 WORKDIR /usr/src/app
+
+# Install Java
+RUN apt update && apt install -y openjdk-11-jdk && \
+    apt clean && rm -rf /var/lib/apt/lists/*
+
+# Set JAVA_HOME
+ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
+RUN java --version
+
 
 # Install dependencies
 COPY requirements.txt ./

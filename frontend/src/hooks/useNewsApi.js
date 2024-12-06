@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 // const API_BASE_URL = 'http://localhost:8000';
-const API_BASE_URL = 'http://13.125.222.0:8000';
+const API_BASE_URL = 'http://43.201.102.226:8000';
 
 export function useNewsApi() {
   const [loading, setLoading] = useState(false);
