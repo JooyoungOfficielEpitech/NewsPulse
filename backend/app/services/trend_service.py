@@ -13,6 +13,8 @@ async def update_trends(db: AsyncSession, keywords: list[str], hours: int = 24):
     start_time = now - timedelta(hours=hours)
 
     try:
+        
+        print("뉴스를 찾는중")
         # 최근 뉴스 데이터 조회
         result = await db.execute(select(News)) #.filter(News.published_at >= start_time))
         recent_news = result.scalars().all()  # 수정된 부분
@@ -23,7 +25,7 @@ async def update_trends(db: AsyncSession, keywords: list[str], hours: int = 24):
 
         # 모든 뉴스의 제목과 설명 합치기
         all_text = " ".join(news.title + " " + news.description for news in recent_news)
-
+        print(all_text)
         
         # 형태소 분석 및 명사 추출
         okt = Okt()
