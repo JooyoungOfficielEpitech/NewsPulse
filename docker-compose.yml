@@ -11,7 +11,7 @@ services:
     networks:
       - app-network
     environment:
-      - DATABASE_URL=postgresql://newspulse_user:bV0_cCo-@postgres:5432/newspulse_db
+      - DATABASE_URL=postgresql://newspulse_user:bV0_@postgres:5432/newspulse_db
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,10 +36,10 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: newspulse_user
-      POSTGRES_PASSWORD: bV0_cCo-
+      POSTGRES_PASSWORD: bV0_
       POSTGRES_DB: newspulse_db
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
