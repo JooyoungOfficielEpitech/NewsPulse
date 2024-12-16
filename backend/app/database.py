@@ -6,7 +6,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 # 데이터베이스 엔진 생성
 
-async_engine = create_async_engine(settings.DATABASE_URL, echo=True)
+
+DATABASE_URL = "postgresql+asyncpg://newspulse_user:bV0_cCo-@localhost:5432/newspulse_db"
+
+async_engine = create_async_engine(settings.ASYNC_DATABASE_URL, echo=True)
 
 
 async_session = sessionmaker(
