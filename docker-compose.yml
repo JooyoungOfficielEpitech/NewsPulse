@@ -11,7 +11,7 @@ services:
     networks:
       - app-network
     environment:
-      - DATABASE_URL=postgresql://newspulse_user:bV0_@postgres:5432/newspulse_db
+      - DATABASE_URL=postgresql://newspulse_user:bV0_cCo-@postgres:5432/newspulse_db
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,10 +36,10 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: newspulse_user
-      POSTGRES_PASSWORD: bV0_
+      POSTGRES_PASSWORD: bV0_cCo-
       POSTGRES_DB: newspulse_db
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app-network
     healthcheck:
@@ -47,10 +47,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
 volumes:
   postgres_data:
-
 networks:
   app-network:
     driver: bridge
