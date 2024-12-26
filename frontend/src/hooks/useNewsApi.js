@@ -1,24 +1,36 @@
 import { useState } from 'react';
 
-// const API_BASE_URL = 'http://localhost:8000';
-const API_BASE_URL = 'http://43.201.102.226:8000';
+// const API_BASE_URL = 'http://43.201.102.226:8000';
+const API_BASE_URL = 'http://localhost:8000';
 
 export function useNewsApi() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchNews = async (category = '', limit = 10) => {
+  const getAuthToken = () => {
+    return localStorage.getItem('token'); // 로컬 스토리지에서 JWT 토큰 가져오기
+  };
+
+  const fetchNews = async (category = '', limit = 5) => {
     try {
+      setLoading(true);
       const params = new URLSearchParams();
       if (category) params.append('category', category);
-      if (limit) params.append('limit', limit);
-      
-      const response = await fetch(`${API_BASE_URL}/news?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch news');
+      params.append('limit', limit);
+
+      const response = await fetch(`${API_BASE_URL}/news?${params}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`, // Authorization 헤더 추가
+        },
+      });
+      if (!response.ok) throw new Error(`Failed to fetch news: ${response.status}`);
       return await response.json();
     } catch (err) {
       setError(err.message);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,12 +40,16 @@ export function useNewsApi() {
       const params = new URLSearchParams();
       categories.forEach(category => params.append('categories', category));
       params.append('interval_minutes', intervalMinutes);
-      
-      const response = await fetch(`${API_BASE_URL}/trends/trend-data?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch trends');
+
+      const response = await fetch(`${API_BASE_URL}/trends/trend-data?${params}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`, // Authorization 헤더 추가
+        },
+      });
+      if (!response.ok) throw new Error(`Failed to fetch trends: ${response.status}`);
       return await response.json();
     } catch (err) {
-      console.log("here")
       setError(err.message);
       throw err;
     } finally {
@@ -49,10 +65,11 @@ export function useNewsApi() {
         headers: {
           'accept': 'application/json',
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`, // Authorization 헤더 추가
         },
-        body: JSON.stringify(selectedCategories)
+        body: JSON.stringify(selectedCategories),
       });
-      if (!response.ok) throw new Error('Failed to refresh trends');
+      if (!response.ok) throw new Error(`Failed to refresh trends: ${response.status}`);
       return await response.json();
     } catch (err) {
       setError(err.message);
@@ -62,20 +79,20 @@ export function useNewsApi() {
     }
   };
 
-  const saveUserPreferences = async (userId, selectedCategories, alertKeywords = []) => {
+  const saveUserPreferences = async (selectedCategories, alertKeywords = []) => {
     try {
       const response = await fetch(`${API_BASE_URL}/user/preferences`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`, // Authorization 헤더 추가
         },
         body: JSON.stringify({
-          user_id: userId,
           selected_categories: selectedCategories,
           alert_keywords: alertKeywords,
         }),
       });
-      if (!response.ok) throw new Error('Failed to save preferences');
+      if (!response.ok) throw new Error(`Failed to save preferences: ${response.status}`);
       return await response.json();
     } catch (err) {
       setError(err.message);
@@ -83,10 +100,15 @@ export function useNewsApi() {
     }
   };
 
-  const getUserPreferences = async (userId) => {
+  const getUserPreferences = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/user/preferences?user_id=${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch preferences');
+      const response = await fetch(`${API_BASE_URL}/user/preferences`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`, // Authorization 헤더 추가
+        },
+      });
+      if (!response.ok) throw new Error(`Failed to fetch preferences: ${response.status}`);
       return await response.json();
     } catch (err) {
       setError(err.message);
@@ -96,38 +118,55 @@ export function useNewsApi() {
 
   const getCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/category/categories`);
-      if (!response.ok) throw new Error('Failed to fetch categories');
+      const response = await fetch(`${API_BASE_URL}/category/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`, // Authorization 헤더 추가
+          'Accept': 'application/json', // 백엔드와 호환되는 헤더 추가
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.status}`);
+      }
+
       return await response.json();
     } catch (err) {
-      setError(err.message);
+      console.error(err);
       throw err;
     }
   };
 
   const addCategory = async (name) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/category/categories`, {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/category/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`, // Authorization 헤더 추가
         },
         body: JSON.stringify({ name }),
       });
-      if (!response.ok) throw new Error('Failed to add category');
+      if (!response.ok) throw new Error(`Failed to add category: ${response.status}`);
       return await response.json();
     } catch (err) {
       setError(err.message);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteCategory = async (categoryId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/category/categories/${categoryId}`, {
+      const response = await fetch(`${API_BASE_URL}/category/${categoryId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`, // Authorization 헤더 추가
+        },
       });
-      if (!response.ok) throw new Error('Failed to delete category');
+      if (!response.ok) throw new Error(`Failed to delete category: ${response.status}`);
       return await response.json();
     } catch (err) {
       setError(err.message);

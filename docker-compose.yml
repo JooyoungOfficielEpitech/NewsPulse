@@ -10,11 +10,14 @@ services:
       - ./backend:/usr/src/app
     networks:
       - app-network
-    environment:
-      - DATABASE_URL=postgresql://newspulse_user:bV0_cCo-@postgres:5432/newspulse_db
     depends_on:
+      redis:
+        condition: service_started
       postgres:
         condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://newspulse_user:bV0_cCo-@postgres:5432/newspulse_db
+      - REDIS_URL=redis://redis:6379/0
 
   frontend:
     build:
@@ -40,6 +43,7 @@ services:
       POSTGRES_DB: newspulse_db
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
@@ -47,8 +51,33 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  celery_worker:
+    build:
+      context: ./backend
+    command: ["celery", "-A", "background.celery_app", "worker", "--loglevel=info"]
+    volumes:
+      - ./backend:/usr/src/app
+    networks:
+      - app-network
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://newspulse_user:bV0_cCo-@postgres:5432/newspulse_db
+      - REDIS_URL=redis://redis:6379/0
+
 volumes:
   postgres_data:
+
 networks:
   app-network:
     driver: bridge

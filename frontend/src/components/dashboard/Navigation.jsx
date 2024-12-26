@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Search, Settings, Newspaper, Menu } from 'lucide-react';
+import { Bell, Search, Newspaper, Menu } from 'lucide-react';
 
 export const Navigation = ({ onMenuClick, onSettingsClick }) => {
   return (
@@ -20,7 +20,7 @@ export const Navigation = ({ onMenuClick, onSettingsClick }) => {
           </div>
           
           <div className="hidden lg:flex items-center space-x-6">
-            <div className="relative">
+            {/* <div className="relative">
               <Search className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
               <input
                 type="text"
@@ -31,12 +31,12 @@ export const Navigation = ({ onMenuClick, onSettingsClick }) => {
             <button className="p-2 rounded-full hover:bg-gray-100 relative">
               <Bell className="h-5 w-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            </button> */}
             <button 
-              className="p-2 rounded-full hover:bg-gray-100"
+              className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm text-gray-700"
               onClick={onSettingsClick}
             >
-              <Settings className="h-5 w-5 text-gray-600" />
+              카테고리 관리
             </button>
           </div>
 

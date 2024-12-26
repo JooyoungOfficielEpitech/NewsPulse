@@ -1,74 +1,53 @@
 import pytest
-from unittest.mock import patch, MagicMock
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.database import Base
-from app.models.news import News
-from app.services.news_service import fetch_news_from_api, save_news_to_db
+from unittest.mock import patch, AsyncMock
+from background.task import crawl_and_save_news
 
-# 가상 SQLite 데이터베이스 설정
-@pytest.fixture(scope="function")
-def test_db():
-    engine = create_engine("sqlite:///:memory:", echo=False)
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    yield db
-    db.close()
-    engine.dispose()
 
-@pytest.fixture(scope="function")
-def mock_api_response():
-    return {
-        "status": "ok",
-        "totalResults": 2,
-        "articles": [
+@pytest.fixture
+def mock_crawl_news():
+    """Mocked crawl_news_from_naver function"""
+    with patch("background.task.crawl_news_from_naver") as mock_crawler:
+        mock_crawler.return_value = [
             {
-                "title": "Title 1",
-                "description": "Description 1",
-                "url": "http://example.com/1",
-                "publishedAt": "2024-12-03T00:00:00Z",
-                "category": "general",
+                "title": "Sample News 1",
+                "description": "Sample Description 1",
+                "url": "http://sample.com/news1",
+                "published_at": "2024-01-01T12:00:00Z",
+                "source": "Sample Source",
             },
             {
-                "title": "Title 2",
-                "description": "Description 2",
-                "url": "http://example.com/2",
-                "publishedAt": "2024-12-03T01:00:00Z",
-                "category": "general",
+                "title": "Sample News 2",
+                "description": "Sample Description 2",
+                "url": "http://sample.com/news2",
+                "published_at": "2024-01-02T12:00:00Z",
+                "source": "Sample Source",
             },
-        ],
-    }
+        ]
+        yield mock_crawler
 
-@patch("app.services.news_service.httpx.get")
-def test_fetch_news_from_api(mock_get, mock_api_response):
-    mock_get.return_value = MagicMock(status_code=200, json=lambda: mock_api_response)
-    api_key = "test_api_key"
-    response = fetch_news_from_api(api_key)
 
-    mock_get.assert_called_once_with(
-        "https://newsapi.org/v2/top-headlines",
-        params={
-            "apiKey": api_key,
-            "category": "general",
-            "country": "kr",
-            "pageSize": 10,
-        },
-    )
+@pytest.fixture
+def mock_db_session():
+    """Mocked AsyncSession for database interaction"""
+    with patch("background.task.SessionLocal") as mock_session:
+        mock_instance = AsyncMock()
+        mock_session.return_value = mock_instance
+        yield mock_instance
 
-    assert response == mock_api_response
 
-def test_save_news_to_db(test_db, mock_api_response):
-    # News 저장 함수 테스트
-    save_news_to_db(mock_api_response["articles"])
+def test_crawl_and_save_news(mock_crawl_news, mock_db_session):
+    """Test crawl_and_save_news task"""
+    category_name = "technology"
+    
+    # Call the Celery task
+    result = crawl_and_save_news(category_name)
 
-    # DB에 데이터가 저장되었는지 확인
-    news_items = test_db.query(News).all()
-    assert len(news_items) == 2
-    assert news_items[0].title == "Title 1"
-    assert news_items[1].title == "Title 2"
+    # Assertions for crawl_news_from_naver
+    mock_crawl_news.assert_called_once_with(category_name, limit=10)  # Check the mock was called
+    assert result["status"] == "success"
+    assert result["category"] == category_name
+    assert result["count"] == len(mock_crawl_news.return_value)
 
-    # 중복된 데이터를 다시 저장해도 DB 내용은 변경되지 않아야 함
-    save_news_to_db(mock_api_response["articles"])
-    news_items = test_db.query(News).all()
-    assert len(news_items) == 2
+    # Assertions for database interactions
+    assert mock_db_session.commit.called
+    assert mock_db_session.close.called

@@ -9,7 +9,7 @@ def schedule_tasks():
     scheduler.add_job(
         update_news_from_api_by_scheduler,
         "interval",
-        minutes=100,
+        minutes=60 * 2,
     )
 
     # 트렌드 업데이트 작업 추가

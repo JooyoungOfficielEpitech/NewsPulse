@@ -135,11 +135,12 @@ const DashboardLayout = () => {
         onMenuClick={() => setIsMobileMenuOpen(true)}
         onSettingsClick={() => setIsCategoryManagerOpen(true)}
       />
-
+ 
       <CategoryBar 
         categories={categories}
         selectedCategories={selectedCategories}
         onToggleCategory={toggleCategory}
+        onDeleteCategory={handleDeleteCategory}  // 새로 추가된 prop
       />
 
       <main className="max-w-7xl mx-auto px-4 py-6">

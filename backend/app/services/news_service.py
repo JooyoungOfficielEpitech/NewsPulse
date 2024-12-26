@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from app.database import SessionLocal
 from app.models.category import Category
 
-from app.services.news_crawler import crawl_news_from_naver
+from background.task import crawl_and_save_news
+
 
 
 def fetch_news_from_api(api_key: str, category: str = "general", limit: int = 10, from_date: str = None, to_date: str = None):
@@ -78,17 +79,10 @@ def update_news_from_api_by_scheduler():
 
         for category in categories_from_db:
             category_name = category.name  # 카테고리 이름 필드
+            category_id = category.id
             print(f"Fetching news for category: {category_name}")
 
-            # API 호출로 뉴스 가져오기
-            data = crawl_news_from_naver(
-                keyword=category_name,
-                limit=10,
-            )
-
-            # 뉴스 저장
-            save_news_to_db(data, category_name)
-            print(f"Saved articles for category: {category_name}")
+            task = crawl_and_save_news.delay(category_name, category_id)
 
     except Exception as e:
         print(f"Error while updating news: {e}")

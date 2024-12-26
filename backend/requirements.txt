@@ -38,7 +38,6 @@ uvloop==0.21.0
 watchfiles==1.0.0
 websockets==14.1
 sqlalchemy
-pydantic-settings
 psycopg2-binary
 alembic
 apscheduler
@@ -50,3 +49,7 @@ email-validator
 bs4
 asyncpg
 konlpy
+celery
+redis
+pyjwt
+passlib
