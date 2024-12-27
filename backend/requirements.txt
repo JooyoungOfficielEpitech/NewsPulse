@@ -53,3 +53,4 @@ celery
 redis
 pyjwt
 passlib
+scrapy

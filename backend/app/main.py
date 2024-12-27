@@ -5,18 +5,16 @@ from app.services.scheduler import schedule_tasks
 from app.database import engine, Base
 from contextlib import asynccontextmanager
 
-# 테이블 생성
-Base.metadata.create_all(bind=engine)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Application startup: resetting database...")
     # 기존 테이블 삭제
-    Base.metadata.drop_all(bind=engine)
-    print("Existing tables dropped.")
+    # Base.metadata.drop_all(bind=engine)
+    # print("Existing tables dropped.")
     # 테이블 다시 생성
-    Base.metadata.create_all(bind=engine)
-    print("New tables created.")
+    # Base.metadata.create_all(bind=engine)
+    # print("New tables created.")
 
     # 스케줄링 작업 시작
     schedule_tasks()

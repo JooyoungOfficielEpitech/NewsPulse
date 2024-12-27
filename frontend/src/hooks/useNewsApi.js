@@ -8,9 +8,25 @@ export function useNewsApi() {
   const [error, setError] = useState(null);
 
   const getAuthToken = () => {
-    return localStorage.getItem('token'); // 로컬 스토리지에서 JWT 토큰 가져오기
+    return localStorage.getItem('token');
   };
 
+  const getCurrentUser = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`,
+          'Accept': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch user info');
+      return await response.json();
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
   const fetchNews = async (category = '', limit = 5) => {
     try {
       setLoading(true);
@@ -183,6 +199,7 @@ export function useNewsApi() {
     getCategories,
     addCategory,
     deleteCategory,
+    getCurrentUser,
     loading,
     error,
   };
