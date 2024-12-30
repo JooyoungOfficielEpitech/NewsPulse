@@ -8,11 +8,9 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Application startup: resetting database...")
-    # 기존 테이블 삭제
+    # print("Application startup: resetting database...")
     # Base.metadata.drop_all(bind=engine)
     # print("Existing tables dropped.")
-    # 테이블 다시 생성
     # Base.metadata.create_all(bind=engine)
     # print("New tables created.")
 

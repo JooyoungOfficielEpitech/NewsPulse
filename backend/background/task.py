@@ -6,6 +6,8 @@ from app.database import SessionLocal
 from app.models.news import News
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
+import traceback  # traceback 모듈 추가
+
 
 # 로거 설정
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +24,7 @@ def crawl_and_save_news(category_name: str, user_id: int):
         fetched_news = crawl_news_from_naver(category_name, limit=10)
         logger.info(f"Scrapy crawl completed. Articles fetched: {len(fetched_news)}")
     except Exception as e:
-        logger.error(f"Scrapy crawl failed: {e}")
+        logger.error(f"Scrapy crawl failed: {e}\n{traceback.format_exc()}")
         return {"status": "failure", "error": str(e)}
 
     # 데이터베이스 저장

@@ -26,13 +26,14 @@ async def create_category(
     result = await db.execute(select(Category).filter(Category.name == category.name))
     existing_category = result.scalar_one_or_none()
     if not existing_category:
+        print("존재하지 않는 카테고리!!!")
         # 전역 카테고리가 없으면 새로 생성
         new_category = Category(name=category.name)
         db.add(new_category)
         await db.commit()
         await db.refresh(new_category)
         existing_category = new_category
-
+    
     # 유저별 카테고리 추가 확인
     result = await db.execute(
         select(UserCategory).filter(
@@ -49,7 +50,7 @@ async def create_category(
     await db.commit()
 
     # 뉴스 크롤링 작업 트리거
-    crawl_and_save_news.delay(existing_category.name, existing_category.id)
+    crawl_and_save_news.delay(existing_category.name, user.id)
 
     return existing_category
 
