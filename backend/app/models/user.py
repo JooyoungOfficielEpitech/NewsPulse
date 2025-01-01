@@ -11,3 +11,4 @@ class User(Base):
 
     news = relationship("News", back_populates="user")  # News와의 관계 설정
     trends = relationship("Trend", back_populates="user")  # Trend와의 관계 설정
+    chat_history = relationship("ChatHistory", back_populates="user", cascade="all, delete-orphan")

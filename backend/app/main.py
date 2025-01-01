@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import news, user, category, auth, trends
+from app.routers import news, user, category, auth, trends, chat
 from app.services.scheduler import schedule_tasks
 from app.database import engine, Base
 from contextlib import asynccontextmanager
+from app.models.chat_history import ChatHistory
 
 
 @asynccontextmanager
@@ -25,8 +26,11 @@ async def lifespan(app: FastAPI):
     print("Shutdown complete.")
 
 # Lifespan 핸들러를 FastAPI에 추가
-print("Initializing FastAPI Application...")
+print("Initializing FastAPI Application")
 app = FastAPI(lifespan=lifespan)
+
+
+Base.metadata.create_all(bind=engine)
 
 # CORS 설정
 app.add_middleware(
@@ -43,6 +47,8 @@ app.include_router(trends.router, prefix="/trends", tags=["trends"])
 app.include_router(user.router, prefix="/user", tags=["user"])
 app.include_router(category.router, prefix="/category", tags=["category"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(chat.router, prefix="/chat", tags=["chat"])
+
 
 @app.get("/")
 async def read_root():
