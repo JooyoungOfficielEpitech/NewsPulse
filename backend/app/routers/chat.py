@@ -27,6 +27,8 @@ from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 db_config = {
     "dbname": "newspulse_db",  
     "user": "newspulse_user",        
@@ -170,6 +172,7 @@ async def query(user_id: int, question: str, db: AsyncSession = Depends(async_ge
     # await save_chat_message(db, user_id, answer, is_user=False)
     
     documents = fetch_news_from_db()
+    print(len(documents))
     vectorstore = setup_vectorstore(documents)
     rag_chain = create_rag_chain(vectorstore)
     answer = rag_chain.invoke(question)
