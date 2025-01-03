@@ -1,18 +1,33 @@
+import logging
 from .celery_app import celery_app
-from app.services.news_crawler import crawl_news_from_naver  # 기존 크롤링 함수
+from app.services.news_crawler import crawl_news_from_naver
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import SessionLocal, settings
+from app.database import SessionLocal
 from app.models.news import News
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
+import traceback  # traceback 모듈 추가
 
 
-# Celery 작업 정의
+# 로거 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 @celery_app.task
 def crawl_and_save_news(category_name: str, user_id: int):
-    print("시작 전 세팅 관리", settings)
-    fetched_news = crawl_news_from_naver(category_name, limit=10)
+    logger.info(f"Starting Celery task for category '{category_name}', user_id={user_id}")
+    fetched_news = []
 
+    try:
+        # Scrapy 크롤링 실행
+        fetched_news = crawl_news_from_naver(category_name, limit=10)
+        logger.info(f"Scrapy crawl completed. Articles fetched: {len(fetched_news)}")
+    except Exception as e:
+        logger.error(f"Scrapy crawl failed: {e}\n{traceback.format_exc()}")
+        return {"status": "failure", "error": str(e)}
+
+    # 데이터베이스 저장
     db: AsyncSession = SessionLocal()
     try:
         for news in fetched_news:
@@ -23,15 +38,15 @@ def crawl_and_save_news(category_name: str, user_id: int):
                 published_at=news["published_at"],
                 source=news["source"],
                 category=category_name,
-                user_id=user_id,  # user_id 추가
-            ).on_conflict_do_nothing(index_elements=["url"])  # 중복시 무시
-
+                user_id=user_id,
+            ).on_conflict_do_nothing(index_elements=["url"])
             db.execute(stmt)
         db.commit()
-        print(f"Successfully saved news for category '{category_name}' and user_id={user_id}.")
+        logger.info(f"Successfully saved news for category '{category_name}' and user_id={user_id}")
     except IntegrityError as e:
         db.rollback()
-        print(f"IntegrityError: {e}")
+        logger.error(f"IntegrityError: {e}")
+        return {"status": "failure", "error": str(e)}
     finally:
         db.close()
 

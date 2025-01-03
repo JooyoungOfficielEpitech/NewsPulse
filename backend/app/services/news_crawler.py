@@ -3,6 +3,25 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import time
 import re
+import random
+
+
+def get_random_headers():
+    """
+    랜덤한 User-Agent와 Referer 헤더를 생성합니다.
+    """
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0",
+    ]
+
+    headers = {
+        "User-Agent": random.choice(user_agents),
+        "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": f"https://search.naver.com/search.naver?query={random.randint(1000, 9999)}",
+    }
+    return headers
 
 
 def crawl_news_from_naver(keyword: str, limit: int = 10):
@@ -17,16 +36,6 @@ def crawl_news_from_naver(keyword: str, limit: int = 10):
         list: 크롤링된 뉴스 기사 목록.
     """
     base_url = "https://search.naver.com/search.naver"
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/108.0.0.0 Safari/537.36"
-        ),
-        "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Referer": "https://search.naver.com",
-    }
-
     articles = []
     page = 1
     articles_per_page = 10  # 네이버 뉴스는 한 페이지당 10개의 결과를 보여줍니다.
@@ -37,15 +46,14 @@ def crawl_news_from_naver(keyword: str, limit: int = 10):
             "where": "news",
             "start": (page - 1) * articles_per_page + 1,  # 페이지 계산
         }
+        headers = get_random_headers()  # 랜덤 헤더 추가
         try:
-
             response = requests.get(
                 base_url, params=params, headers=headers, timeout=10
             )
 
             # HTTP 상태 코드 확인
             if response.status_code == 403:
-                print(response.text)
                 log_crawling_error(keyword, response.status_code, "Access Denied")
                 break
             elif response.status_code != 200:
@@ -79,7 +87,7 @@ def crawl_news_from_naver(keyword: str, limit: int = 10):
                     break
 
             page += 1
-            time.sleep(1)  # 요청 간 딜레이 추가
+            time.sleep(random.uniform(1, 3))  # 요청 간 딜레이 추가
 
         except requests.exceptions.RequestException as e:
             log_crawling_error(keyword, None, f"Request failed: {e}")
@@ -132,7 +140,10 @@ def extract_published_date(item):
         now = datetime.now()
 
         for element in info_elements:
-            date_text = element.text.strip()
+            date_text = element.text.strip() if element.text else None
+
+            if not date_text:  # date_text가 None이면 건너뛰기
+                continue
 
             # 상대 시간 처리 (예: "1일 전", "3시간 전")
             if "전" in date_text:
@@ -158,3 +169,4 @@ def extract_published_date(item):
         print(f"Error extracting date: {e}")
 
     return None
+

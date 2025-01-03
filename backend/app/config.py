@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     ASYNC_DATABASE_URL : str
     CELERY_BROKER_URL : str
     CELERY_RESULT_BACKEND : str
+    OPENAI_API_KEY : str
 
     class Config:
         env_file = ".env"

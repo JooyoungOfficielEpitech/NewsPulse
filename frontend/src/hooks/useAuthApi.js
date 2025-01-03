@@ -1,6 +1,8 @@
 import { useState } from 'react';
 
-const API_BASE_URL = 'http://localhost:8000';
+// const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 
 export function useAuthApi() {
   const [loading, setLoading] = useState(false);
@@ -10,7 +12,7 @@ export function useAuthApi() {
   const login = async (username, password) => {
     console.log(username, password)
     try {
-      const response = await fetch('http://localhost:8000/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
