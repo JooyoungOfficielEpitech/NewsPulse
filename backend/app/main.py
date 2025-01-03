@@ -33,12 +33,17 @@ app = FastAPI(lifespan=lifespan)
 Base.metadata.create_all(bind=engine)
 
 # CORS 설정
+origins = [
+    "http://3.39.6.192:3000",  # 프론트엔드 주소 (유동적이게 바꿀 필요 았음)
+    "http://localhost:3000",   # 개발 환경용
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 프론트엔드 URL
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],  # 모든 HTTP 메서드 허용
-    allow_headers=["*"],  # 모든 HTTP 헤더 허용
+    allow_headers=["*"],  # 모든 헤더 허용
 )
 
 # Include Routers
