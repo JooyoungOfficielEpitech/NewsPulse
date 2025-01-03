@@ -10,6 +10,9 @@ from langchain_openai import OpenAIEmbeddings
 from app.database import SessionLocal
 from sqlalchemy.future import select
 from app.models.news import News
+from app.models.user import User
+from app.dependencies import get_current_user
+
 
 
 
@@ -37,7 +40,7 @@ db_config = {
     "port": "5432"              
 }
 
-def fetch_news_from_db():
+def fetch_news_from_db(user_id):
     """
     PostgreSQL 데이터베이스에서 'news' 테이블의 데이터를 가져옵니다.
     """
@@ -46,11 +49,10 @@ def fetch_news_from_db():
 
     try:
         # "news" 테이블에서 title과 description 가져오기
-        result = db.execute(select(News).filter(News.user_id == 1))
+        result = db.execute(select(News).filter(News.user_id == user_id))
         rows = [r for r in result.all()]
         
         print(f"DOCUMENT len : {len(rows)}")
-        print(dir(rows[0]))
 
         # 데이터를 LangChain Document 형식으로 변환
         documents = [
@@ -116,7 +118,7 @@ router = APIRouter()
 
 
 @router.post("/query")
-async def query(user_id: int, question: str, db: AsyncSession = Depends(async_get_db)):
+async def query(user_id: int, question: str, db: AsyncSession = Depends(async_get_db), user: User = Depends(get_current_user)):
     """
     Handles user queries and returns answers using the RAG chain mechanism with hardcoded context.
     """
@@ -171,8 +173,9 @@ async def query(user_id: int, question: str, db: AsyncSession = Depends(async_ge
     # await save_chat_message(db, user_id, hardcoded_question, is_user=True)
     # await save_chat_message(db, user_id, answer, is_user=False)
     
-    documents = fetch_news_from_db()
+    documents = fetch_news_from_db(user.id)
     print(len(documents))
+    # print(documents)
     vectorstore = setup_vectorstore(documents)
     rag_chain = create_rag_chain(vectorstore)
     answer = rag_chain.invoke(question)
