@@ -9,11 +9,11 @@ from app.models.chat_history import ChatHistory
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Application startup: resetting database...")
-    Base.metadata.drop_all(bind=engine)
-    print("Existing tables dropped.")
-    Base.metadata.create_all(bind=engine)
-    print("New tables created.")
+    # print("Application startup: resetting database...")
+    # Base.metadata.drop_all(bind=engine)
+    # print("Existing tables dropped.")
+    # Base.metadata.create_all(bind=engine)
+    # print("New tables created.")
 
     # 스케줄링 작업 시작
     schedule_tasks()

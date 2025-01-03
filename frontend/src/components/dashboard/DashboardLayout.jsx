@@ -55,7 +55,7 @@ const DashboardLayout = () => {
     loadCategories();
   }, []);
 
-  
+
 
   const loadData = async () => {
     try {
@@ -108,16 +108,16 @@ const DashboardLayout = () => {
       const newCategories = prev.includes(categoryName)
         ? prev.filter(c => c !== categoryName)
         : [...prev, categoryName];
-      
+
       // saveUserPreferences를 통해 서버에 변경사항 저장
       saveUserPreferences(newCategories, []).catch(error => {
         console.error('Error saving category preferences:', error);
       });
-      
+
       return newCategories;
     });
   };
-  
+
   const handleAddCategory = async (newCategoryName) => {
     try {
       const newCategory = await addCategory(newCategoryName); // useNewsApi의 addCategory 함수 사용
@@ -169,6 +169,8 @@ const DashboardLayout = () => {
         categories={categories}
         selectedCategories={selectedCategories}
         onToggleCategory={toggleCategory}
+        onAddCategory={handleAddCategory} // 여기 추가
+        onDeleteCategory={handleDeleteCategory} // 필요하면 추가
       />
 
       <Navigation

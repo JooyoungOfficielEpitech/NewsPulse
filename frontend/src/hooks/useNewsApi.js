@@ -1,7 +1,10 @@
 import { useState } from 'react';
 
 // const API_BASE_URL = 'http://43.201.102.226:8000';
-const API_BASE_URL = 'http://localhost:8000';
+// const API_BASE_URL = 'http://localhost:8000';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 
 export function useNewsApi() {
   const [loading, setLoading] = useState(false);
@@ -43,6 +46,7 @@ export function useNewsApi() {
   };
 
   const fetchNews = async (category = '', limit = 5) => {
+    console.log(API_BASE_URL);
     try {
       setLoading(true);
       setError(null);
@@ -174,6 +178,7 @@ export function useNewsApi() {
   };
 
   const queryChatbot = async (question) => {
+    console.log(API_BASE_URL);
     if (!question?.trim()) {
       throw new Error('질문을 입력해주세요.');
     }
