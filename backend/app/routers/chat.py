@@ -175,7 +175,7 @@ async def query(user_id: int, question: str, db: AsyncSession = Depends(async_ge
     
     documents = fetch_news_from_db(user.id)
     print(len(documents))
-    # print(documents)
+    print(documents)
     vectorstore = setup_vectorstore(documents)
     rag_chain = create_rag_chain(vectorstore)
     answer = rag_chain.invoke(question)
