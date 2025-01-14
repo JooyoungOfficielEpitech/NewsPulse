@@ -24,7 +24,6 @@ export function useAuthApi() {
       });
       
       if (!response.ok) throw new Error('Failed to log in');
-      console.log("toto");
       const data = await response.json();
       console.log('Login successful:', data);
       return data;

@@ -34,15 +34,6 @@ export const MobileMenu = ({
           <X className="h-6 w-6" />
         </button>
         <div className="mt-12 space-y-4">
-          {/* 검색 필드 */}
-          <div className="relative w-full">
-            <Search className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="뉴스 검색..."
-              className="w-full pl-10 pr-4 py-2 border rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
 
           {/* 카테고리 목록 */}
           {categories.map((category) => (
