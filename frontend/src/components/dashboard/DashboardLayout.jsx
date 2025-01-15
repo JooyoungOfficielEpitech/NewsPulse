@@ -7,8 +7,12 @@ import { ChatInterface } from './ChatInterface';
 import { NewsFeed } from './NewsFeed';
 import { CategoryTrendCard } from './CategoryTrendCard';
 import { CategoryManager } from './CategoryManager';
+import { useNavigate } from 'react-router-dom';
+
 
 const DashboardLayout = () => {
+  const navigate = useNavigate();
+
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
@@ -29,6 +33,21 @@ const DashboardLayout = () => {
     getCurrentUser, // 추가된 함수
   } = useNewsApi();
 
+  // 시용자 로그인 후 뒤로가기 방지
+  useEffect(() => {
+    const preventBack = () => {
+      if (localStorage.getItem("token")) {
+        navigate(1); // 앞으로 이동
+      }
+    };
+
+    window.addEventListener('popstate', preventBack);
+    return () => {
+      window.removeEventListener('popstate', preventBack);
+    };
+  }, [navigate]);
+
+
   // 사용자 정보 가져오기
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -36,6 +55,7 @@ const DashboardLayout = () => {
         const user = await getCurrentUser();
         setUsername(user.username); // 서버에서 가져온 사용자 이름 설정
       } catch (error) {
+        
         console.error('Error fetching current user:', error);
       }
     };
@@ -54,6 +74,8 @@ const DashboardLayout = () => {
     };
     loadCategories();
   }, []);
+
+
 
 
 

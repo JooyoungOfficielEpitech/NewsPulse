@@ -1,48 +1,50 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
-// const API_BASE_URL = 'http://localhost:8000';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     try {
-      const endpoint = isLogin ? '/auth/login' : '/auth/register';
+      const endpoint = isLogin ? "/auth/login" : "/auth/register";
       const requestBody = { username, password };
 
       if (!isLogin && password !== confirmPassword) {
-        throw new Error('Passwords do not match');
+        throw new Error("Passwords do not match");
       }
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || (isLogin ? 'Login failed' : 'Registration failed'));
+        throw new Error(
+          errorData.detail || (isLogin ? "Login failed" : "Registration failed")
+        );
       }
 
       const data = await response.json();
       if (isLogin) {
-        localStorage.setItem('token', data.access_token);
-        navigate('/dashboard');
+        login(data.access_token); // AuthContext의 login 호출
+        navigate("/dashboard");
       } else {
-        setIsLogin(true);
+        setIsLogin(true); // 회원가입 후 로그인 화면으로 전환
       }
     } catch (err) {
       setError(err.message);
@@ -54,7 +56,7 @@ const AuthPage = () => {
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {isLogin ? 'NewsPulse 로그인' : 'Create your account'}
+            {isLogin ? "NewsPulse 로그인" : "Create your account"}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
@@ -62,7 +64,7 @@ const AuthPage = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              {isLogin ? 'Sign up' : 'Sign in'}
+              {isLogin ? "Sign up" : "Sign in"}
             </button>
           </p>
         </div>
@@ -125,7 +127,7 @@ const AuthPage = () => {
             type="submit"
             className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            {isLogin ? 'Sign in' : 'Sign up'}
+            {isLogin ? "Sign in" : "Sign up"}
             <ArrowRight className="ml-2 h-5 w-5" />
           </button>
         </form>

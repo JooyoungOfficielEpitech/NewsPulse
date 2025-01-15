@@ -10,7 +10,6 @@ export function useAuthApi() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const login = async (username, password) => {
-    console.log(username, password)
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
