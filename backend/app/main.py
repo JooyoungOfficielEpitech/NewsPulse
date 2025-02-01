@@ -27,8 +27,14 @@ async def lifespan(app: FastAPI):
 
 # Lifespan 핸들러를 FastAPI에 추가
 print("Initializing FastAPI Application")
-app = FastAPI(lifespan=lifespan)
 
+app = FastAPI(
+    lifespan=lifespan,
+    root_path="/api",  # 모든 엔드포인트를 '/api' 아래로 이동
+    docs_url="/docs",  # Swagger UI 경로
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -62,4 +68,5 @@ async def read_root():
     return {
         "message": "Hello, NewsPulse!",
         "routes": [route.path for route in app.routes],
-    }
+    
+}
