@@ -1,8 +1,5 @@
 import { useState } from 'react';
 
-// const API_BASE_URL = 'http://43.201.102.226:8000';
-// const API_BASE_URL = 'http://localhost:8000';
-
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 
@@ -11,7 +8,7 @@ export function useNewsApi() {
   const [error, setError] = useState(null);
 
   const getAuthToken = () => {
-    const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
     }
