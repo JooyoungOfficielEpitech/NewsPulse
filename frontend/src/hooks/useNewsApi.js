@@ -51,7 +51,7 @@ export function useNewsApi() {
       if (category) params.append('category', category);
       params.append('limit', limit.toString());
 
-      const response = await fetch(`${API_BASE_URL}/news?${params}`, {
+      const response = await fetch(`https://jooyoung.click/api/news?${params}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`,
