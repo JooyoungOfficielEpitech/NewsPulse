@@ -106,7 +106,7 @@ def create_rag_chain(vectorstore):
     rag_chain = (
         {"context": retriever | format_docs, "question": RunnablePassthrough()}
         | prompt
-        | ChatOpenAI(model="gpt-4o", temperature=0, max_tokens=None)
+        | ChatOpenAI(model="gpt-4o-mini", temperature=0, max_tokens=None)
         | StrOutputParser()
     )
     return rag_chain
