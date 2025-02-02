@@ -5,8 +5,14 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // 이렇게 하면 0.0.0.0으로 바인딩됩니다
+    host: '0.0.0.0',  // 외부에서 접근 가능하게 설정
     port: 3000,
+    strictPort: true,
+    hmr: {
+      protocol: 'wss',  // WebSocket 프로토콜을 wss로 설정
+      host: 'jooyoung.click',  // 실제 도메인 사용
+      port: 443,
+    }
   },
   resolve: {
     alias: {
