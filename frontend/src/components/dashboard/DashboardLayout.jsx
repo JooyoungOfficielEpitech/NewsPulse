@@ -132,7 +132,7 @@ const DashboardLayout = () => {
         : [...prev, categoryName];
 
       // saveUserPreferences를 통해 서버에 변경사항 저장
-      saveUserPreferences(newCategories, []).catch(error => {
+      saveUserPreferences(username, newCategories, []).catch(error => {
         console.error('Error saving category preferences:', error);
       });
 
@@ -171,7 +171,7 @@ const DashboardLayout = () => {
     setSelectedCategories(newCategories);
 
     try {
-      await saveUserPreferences(newCategories, []);
+      await saveUserPreferences(username, newCategories, []);
     } catch (error) {
       console.error('Error saving preferences:', error);
     }

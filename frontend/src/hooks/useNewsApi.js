@@ -111,7 +111,7 @@ export function useNewsApi() {
     }
   };
 
-  const saveUserPreferences = async (selectedCategories, alertKeywords = []) => {
+  const saveUserPreferences = async (username, selectedCategories, alertKeywords = []) => {
     try {
       setLoading(true);
       setError(null);
@@ -122,6 +122,7 @@ export function useNewsApi() {
           'Authorization': `Bearer ${getAuthToken()}`,
         },
         body: JSON.stringify({
+          user_id : username,
           selected_categories: selectedCategories,
           alert_keywords: alertKeywords,
         }),
