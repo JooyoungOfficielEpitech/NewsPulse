@@ -9,8 +9,10 @@ import { useNewsApi } from '@/hooks/useNewsApi';
 const ChatMessage = React.memo(({ message, isUser, timestamp, isError, isLoading }) => (
   <div className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
     {!isUser && (
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 
-        ${isError ? 'bg-destructive/10' : 'bg-primary/10'}`}>
+      <div
+        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 
+          ${isError ? 'bg-destructive/10' : 'bg-primary/10'}`}
+      >
         <Bot className={`w-5 h-5 ${isError ? 'text-destructive' : 'text-primary'}`} />
       </div>
     )}
@@ -53,6 +55,8 @@ export const ChatInterface = ({
   onIntervalChange 
 }) => {
   const { queryChatbot } = useNewsApi();
+
+  // 초기 메시지 상태를 localStorage에서 가져옵니다.
   const [messages, setMessages] = useState(() => {
     const savedMessages = localStorage.getItem('chatMessages');
     return savedMessages ? JSON.parse(savedMessages) : [];
@@ -62,7 +66,18 @@ export const ChatInterface = ({
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // 메시지 저장
+  // "첫 로그인" 플래그 확인: 플래그가 없으면 대화 내역 초기화
+  useEffect(() => {
+    const hasLoggedInBefore = localStorage.getItem('hasLoggedInBefore');
+    if (!hasLoggedInBefore) {
+      // 첫 로그인일 경우 localStorage와 상태 모두 초기화
+      localStorage.removeItem('chatMessages');
+      setMessages([]);
+      localStorage.setItem('hasLoggedInBefore', 'true');
+    }
+  }, []);
+
+  // 메시지 상태가 변경될 때마다 localStorage에 저장
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(messages));
   }, [messages]);
@@ -76,10 +91,12 @@ export const ChatInterface = ({
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // 채팅 메시지 초기화
+  // 채팅 메시지 초기화 (사용자가 원할 때 호출)
   const handleReset = useCallback(() => {
     setMessages([]);
     localStorage.removeItem('chatMessages');
+    // 필요하다면 플래그도 초기화할 수 있습니다.
+    localStorage.removeItem('hasLoggedInBefore');
   }, []);
 
   // 선택된 카테고리가 변경될 때마다 안내 메시지 추가
@@ -88,19 +105,25 @@ export const ChatInterface = ({
       setMessages(prev => {
         const lastMessage = prev[prev.length - 1];
         if (lastMessage?.type === 'category-update') {
-          return [...prev.slice(0, -1), {
+          return [
+            ...prev.slice(0, -1),
+            {
+              text: `선택된 카테고리: ${selectedCategories.join(', ')}`,
+              isUser: false,
+              timestamp: new Date(),
+              type: 'category-update'
+            }
+          ];
+        }
+        return [
+          ...prev,
+          {
             text: `선택된 카테고리: ${selectedCategories.join(', ')}`,
             isUser: false,
             timestamp: new Date(),
             type: 'category-update'
-          }];
-        }
-        return [...prev, {
-          text: `선택된 카테고리: ${selectedCategories.join(', ')}`,
-          isUser: false,
-          timestamp: new Date(),
-          type: 'category-update'
-        }];
+          }
+        ];
       });
     }
   }, [selectedCategories]);
@@ -125,12 +148,15 @@ export const ChatInterface = ({
     try {
       setLocalLoading(true);
       // 로딩 메시지 추가
-      setMessages(prev => [...prev, {
-        text: '답변을 생성하고 있습니다...',
-        isUser: false,
-        timestamp: new Date(),
-        isLoading: true
-      }]);
+      setMessages(prev => [
+        ...prev,
+        {
+          text: '답변을 생성하고 있습니다...',
+          isUser: false,
+          timestamp: new Date(),
+          isLoading: true
+        }
+      ]);
 
       // API 호출 (선택된 카테고리 전달)
       const response = await queryChatbot(trimmedInput, selectedCategories);
@@ -138,22 +164,28 @@ export const ChatInterface = ({
       // 로딩 메시지 제거 및 실제 응답 추가
       setMessages(prev => {
         const filtered = prev.filter(msg => !msg.isLoading);
-        return [...filtered, {
-          text: response.response || '죄송합니다. 답변을 생성하는데 문제가 발생했습니다.',
-          isUser: false,
-          timestamp: new Date()
-        }];
+        return [
+          ...filtered,
+          {
+            text: response.response || '죄송합니다. 답변을 생성하는데 문제가 발생했습니다.',
+            isUser: false,
+            timestamp: new Date()
+          }
+        ];
       });
     } catch (error) {
       // 로딩 메시지 제거 및 에러 메시지 추가
       setMessages(prev => {
         const filtered = prev.filter(msg => !msg.isLoading);
-        return [...filtered, {
-          text: error.message || '죄송합니다. 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-          isUser: false,
-          timestamp: new Date(),
-          isError: true
-        }];
+        return [
+          ...filtered,
+          {
+            text: error.message || '죄송합니다. 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+            isUser: false,
+            timestamp: new Date(),
+            isError: true
+          }
+        ];
       });
     } finally {
       setLocalLoading(false);
@@ -177,7 +209,7 @@ export const ChatInterface = ({
             뉴스에 관한 질문을 해주세요!
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            AI 가 수집된 뉴스를 기반으로 답해드립니다
+            AI가 수집된 뉴스를 기반으로 답해드립니다
           </p>
         </div>
         {messages.length > 0 && (
@@ -226,7 +258,7 @@ export const ChatInterface = ({
               type="submit"
               disabled={!inputValue.trim() || isLoading}
               className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 
-                       disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                         disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-5 h-5" />
             </button>
