@@ -180,7 +180,8 @@ const DashboardLayout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    alert('로그아웃 되었습니다.');
+    alert(username);
+    alert('로그아웃임.');
     window.location.href = '/';
   };
 
