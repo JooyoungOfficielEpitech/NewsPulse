@@ -17,4 +17,4 @@ RUN npm run build
 EXPOSE 3000
 
 # 빌드 후 preview 서버 실행 (0.0.0.0에서 바인딩)
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]
