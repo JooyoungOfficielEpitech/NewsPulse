@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
+import Spinner from './Spinner';
+
 
 export const CategoryManager = ({ 
   isOpen, 

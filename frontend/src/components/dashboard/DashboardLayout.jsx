@@ -9,10 +9,8 @@ import { CategoryTrendCard } from './CategoryTrendCard';
 import { CategoryManager } from './CategoryManager';
 import { useNavigate } from 'react-router-dom';
 
-
 const DashboardLayout = () => {
   const navigate = useNavigate();
-
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
@@ -21,7 +19,9 @@ const DashboardLayout = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedInterval, setSelectedInterval] = useState(60);
-  const [username, setUsername] = useState(''); // 서버에서 가져온 사용자 이름
+  const [username, setUsername] = useState('');
+  // 카테고리 추가 진행 중 여부 (추가 후 3초 동안 유지)
+  const [categoryLoading, setCategoryLoading] = useState(false);
 
   const {
     fetchNews,
@@ -30,39 +30,34 @@ const DashboardLayout = () => {
     getCategories,
     addCategory,
     deleteCategory,
-    getCurrentUser, // 추가된 함수
+    getCurrentUser,
   } = useNewsApi();
 
-  // 시용자 로그인 후 뒤로가기 방지
+  // 뒤로가기 방지
   useEffect(() => {
     const preventBack = () => {
       if (localStorage.getItem("token")) {
-        navigate(1); // 앞으로 이동
+        navigate(1);
       }
     };
-
     window.addEventListener('popstate', preventBack);
-    return () => {
-      window.removeEventListener('popstate', preventBack);
-    };
+    return () => window.removeEventListener('popstate', preventBack);
   }, [navigate]);
 
-
-  // 사용자 정보 가져오기
+  // 사용자 정보 로드
   useEffect(() => {
     const loadCurrentUser = async () => {
       try {
         const user = await getCurrentUser();
-        setUsername(user.username); // 서버에서 가져온 사용자 이름 설정
+        setUsername(user.username);
       } catch (error) {
-        
         console.error('Error fetching current user:', error);
       }
     };
-
     loadCurrentUser();
   }, []);
 
+  // 카테고리 로드
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -75,14 +70,10 @@ const DashboardLayout = () => {
     loadCategories();
   }, []);
 
-
-
-
-
+  // 뉴스와 트렌드 데이터 로드
   const loadData = async () => {
     try {
       setLoading(true);
-
       const newsPromises = selectedCategories.map((category) =>
         fetchNews(category, 5)
       );
@@ -99,7 +90,6 @@ const DashboardLayout = () => {
           })) || [],
         };
       });
-
       const trendResults = await Promise.all(trendPromises);
       setTrendData(trendResults);
     } catch (error) {
@@ -110,43 +100,45 @@ const DashboardLayout = () => {
   };
 
   useEffect(() => {
-    if (selectedCategories.length > 0) {
-      loadData();
-    }
+    if (selectedCategories.length > 0) loadData();
   }, [selectedCategories, selectedInterval]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (selectedCategories.length > 0) {
-        loadData();
-      }
+      if (selectedCategories.length > 0) loadData();
     }, 5 * 60 * 1000);
-
     return () => clearInterval(intervalId);
   }, [selectedCategories, selectedInterval]);
 
+  // 토글 시, 카테고리 추가 진행 중이면 동작하지 않음
   const handleToggleCategory = (categoryName) => {
+    if (categoryLoading) return;
     setSelectedCategories(prev => {
       const newCategories = prev.includes(categoryName)
         ? prev.filter(c => c !== categoryName)
         : [...prev, categoryName];
 
-      // saveUserPreferences를 통해 서버에 변경사항 저장
-      alert(username);
       saveUserPreferences(username, newCategories, []).catch(error => {
         console.error('Error saving category preferences:', error);
       });
-
       return newCategories;
     });
   };
 
+  // 카테고리 추가: 로딩 상태 관리 및 완료 후 3초간 로딩 스피너 유지
   const handleAddCategory = async (newCategoryName) => {
+    if (categoryLoading) return;
     try {
-      const newCategory = await addCategory(newCategoryName); // useNewsApi의 addCategory 함수 사용
+      setCategoryLoading(true);
+      const newCategory = await addCategory(newCategoryName);
       setCategories(prev => [...prev, newCategory]);
     } catch (error) {
       console.error('카테고리 추가 중 오류 발생:', error);
+    } finally {
+      // 3초 동안 로딩 상태 유지하여 스피너 효과 보여주기
+      setTimeout(() => {
+        setCategoryLoading(false);
+      }, 3000);
     }
   };
 
@@ -165,23 +157,11 @@ const DashboardLayout = () => {
   };
 
   const toggleCategory = async (category) => {
-    const newCategories = selectedCategories.includes(category)
-      ? selectedCategories.filter((c) => c !== category)
-      : [...selectedCategories, category];
-
-    setSelectedCategories(newCategories);
-
-    try {
-      await saveUserPreferences(username, newCategories, []);
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-    }
+    handleToggleCategory(category);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    alert(username);
-    alert('로그아웃임.');
     window.location.href = '/';
   };
 
@@ -192,9 +172,10 @@ const DashboardLayout = () => {
         onClose={() => setIsMobileMenuOpen(false)}
         categories={categories}
         selectedCategories={selectedCategories}
-        onToggleCategory={toggleCategory}
-        onAddCategory={handleAddCategory} // 여기 추가
-        onDeleteCategory={handleDeleteCategory} // 필요하면 추가
+        onToggleCategory={handleToggleCategory}
+        onAddCategory={handleAddCategory}
+        onDeleteCategory={handleDeleteCategory}
+        categoryLoading={categoryLoading}
       />
 
       <Navigation
@@ -209,7 +190,8 @@ const DashboardLayout = () => {
         selectedCategories={selectedCategories}
         onToggleCategory={handleToggleCategory}
         onDeleteCategory={handleDeleteCategory}
-        onAddCategory={handleAddCategory}  // 새로 추가된 prop
+        onAddCategory={handleAddCategory}
+        categoryLoading={categoryLoading}
       />
 
       <main className="max-w-7xl mx-auto px-4 py-6">
@@ -223,14 +205,9 @@ const DashboardLayout = () => {
           />
           <NewsFeed loading={loading} newsData={newsData} />
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {selectedCategories.map((category) => (
-            <CategoryTrendCard
-              key={category}
-              category={category}
-              loading={loading}
-            />
+            <CategoryTrendCard key={category} category={category} loading={loading} />
           ))}
         </div>
       </main>
@@ -241,6 +218,7 @@ const DashboardLayout = () => {
         categories={categories}
         onAddCategory={handleAddCategory}
         onDeleteCategory={handleDeleteCategory}
+        categoryLoading={categoryLoading}
       />
     </div>
   );
